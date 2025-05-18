@@ -8,6 +8,9 @@
 4. Update the saved note
 5. Delete a particular note
 
+   ## Tech Stack used
+   Python, streamlit 
+
    ## What did I learn while building this project ?
    I learnt how to build a functional crud app which basically creates, reads, updates and delete a set of data or a parameter. While building this project I explored how to work with a <b>JSON File</b> which also helped me use the concepts of file I/O in python.
 
