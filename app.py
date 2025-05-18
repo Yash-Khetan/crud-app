@@ -1,8 +1,8 @@
-import streamlit as st 
-import json 
-import os 
+import streamlit as st
+import json
+import os
 
-file  = "notes.json"
+file = "notes.json"
 
 def load_notes():
     if os.path.exists(file):
@@ -10,9 +10,8 @@ def load_notes():
             try:
                 return json.load(f)
             except json.JSONDecodeError:
-                return {}  # If file is empty or broken
-    return {}  # file doesn't exist
-
+                return {}
+    return {}
 
 def save_notes(notes):
     with open(file, "w") as f:
@@ -20,81 +19,69 @@ def save_notes(notes):
 
 st.title("📝 Notes Taker")
 
-# Load existing notes
 notes = load_notes()
-tags = ["personal","important","urgent"]
+tags = ["personal", "important", "urgent"]
 
+# Add new note
 note_header = st.text_input("Header of note")
 note_input = st.text_area("Enter your note")
-tag = st.multiselect("Choose a tag!",list(tags))
+custom_tag = st.text_input("Add a new custom tag (optional)")
 
+if custom_tag and custom_tag not in tags:
+    tags.append(custom_tag)
 
+tag = st.multiselect("Choose a tag!", list(tags))
 
 if st.button("Add Note"):
     if note_header and note_input:
         notes[note_header] = {
-            "content" : note_input,
-            "tag" : [tags]
+            "content": note_input,
+            "tag": tag  # ✅ correct type (list of strings)
         }
         save_notes(notes)
         st.success(f"Note '{note_header}' added successfully!")
     else:
         st.warning("Please fill both fields.")
 
-# implementing the search feature. 
-
-# search  = st.text_input(" ## Search the task",placeholder="Ex. Shopping List")
-# if search == "":
-#     st.info("Search the keyword above to find your task!")
-# else :
-#     for header in notes:
-
-
-
-
+# Show all notes
 st.markdown("### 📚 Your Notes")
 
 if notes:
     for header, content in notes.items():
         with st.expander(header):
-            st.write(content)
+            st.write("✍️", content["content"])
+            st.write("🏷️ Tags:", ", ".join(content["tag"]))
 else:
     st.info("No notes yet. Add some above!")
 
+# Edit mode
 if "edit_mode" not in st.session_state:
     st.session_state.edit_mode = False
 
-edit = st.button("Edit a task")
-if edit:
-    st.session_state.edit_mode= True
+if st.button("Edit a task"):
+    st.session_state.edit_mode = True
 
 if st.session_state.edit_mode:
-    edit_header = st.selectbox("Choose: ", list(notes.keys()))
-    
-    new_data = st.text_area("Edit the content below:", value=notes[edit_header])
+    edit_header = st.selectbox("Choose a note to edit", list(notes.keys()))
+    new_data = st.text_area("Edit the content below:", value=notes[edit_header]["content"])
     if st.button("Update Note"):
-        notes[edit_header] = new_data
+        notes[edit_header]["content"] = new_data
         save_notes(notes)
         st.success(f"Note '{edit_header}' updated successfully!")
         st.session_state.edit_mode = False
-            
 
+# Delete mode
 if "delete_mode" not in st.session_state:
     st.session_state.delete_mode = False
 
-delete = st.button("Delete a task")
-if delete:
-    st.session_state.delete_mode = True 
+if st.button("Delete a task"):
+    st.session_state.delete_mode = True
 
 if st.session_state.delete_mode:
-    
-    delete_header = st.selectbox("Choose the header: ",list(notes.keys()))
-    st.text_area("Content in the above file is: ",value = notes[delete_header])
-    deletebutton = st.button("Confirm deletion")
-    if deletebutton:
+    delete_header = st.selectbox("Choose the header to delete", list(notes.keys()))
+    st.text_area("Content:", value=notes[delete_header]["content"])
+    if st.button("Confirm deletion"):
         notes.pop(delete_header)
         save_notes(notes)
         st.success(f"Note deleted successfully!")
-        st.session_state.delete_mode = False 
-            
-               
+        st.session_state.delete_mode = False
