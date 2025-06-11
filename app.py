@@ -20,7 +20,10 @@ def save_notes(notes):
 st.title("📝 Notes Taker")
 
 notes = load_notes()
-tags = ["personal", "important", "urgent"]
+
+if "tags" not in st.session_state: 
+    st.session_state.tags = []
+tags = st.session_state.tags
 
 # Add new note
 note_header = st.text_input("Header of note")
@@ -28,9 +31,9 @@ note_input = st.text_area("Enter your note")
 custom_tag = st.text_input("Add a new custom tag (optional)")
 
 if custom_tag and custom_tag not in tags:
-    tags.append(custom_tag)
+    st.session_state.tags.append(custom_tag)
 
-tag = st.multiselect("Choose a tag!", list(tags))
+tag = st.multiselect("Choose a tag!", tags)
 
 if st.button("Add Note"):
     if note_header and note_input:
@@ -45,12 +48,29 @@ if st.button("Add Note"):
 
 # Show all notes
 st.markdown("### 📚 Your Notes")
+search  = st.text_input("Search Your note", placeholder="Search for your note")
+
+filtered_notes = {}
+if search:
+    for header, content in notes.items():
+        if search.lower() in header.lower() or search.lower() in content["content"].lower():
+            filtered_notes[header] = content
+else:
+    filtered_notes = notes
+if filtered_notes:
+    for header, content in filtered_notes.items():
+        with st.expander(header):
+            st.write("✍️", content["content"])
+            st.write("🏷️ Tags:", ", ".join(content["tag"]))
+else:
+    st.warning("No matching notes found.")
 
 if notes:
     for header, content in notes.items():
         with st.expander(header):
             st.write("✍️", content["content"])
             st.write("🏷️ Tags:", ", ".join(content["tag"]))
+
 else:
     st.info("No notes yet. Add some above!")
 
@@ -74,7 +94,7 @@ if st.session_state.edit_mode:
 if "delete_mode" not in st.session_state:
     st.session_state.delete_mode = False
 
-if st.button("Delete a task"):
+if st.button("Delete a Note"):
     st.session_state.delete_mode = True
 
 if st.session_state.delete_mode:
